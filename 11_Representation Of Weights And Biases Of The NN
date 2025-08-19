@@ -1,0 +1,15 @@
+#### SCRIPT FOR REPRESENTING WEIGHTS AND BIASES OF THE NN 
+from tensorflow.keras.models import load_model 
+import numpy as np 
+ 
+model = load_model(r"C:\Users\loren\Downloads\TFG MITBIH 
+TRAIN\model_intervals.h5") 
+ 
+# Obtain layers 
+for i, layer in enumerate(model.layers): 
+    weights, biases = layer.get_weights() 
+    print(f"\nLayer {i + 1} - {layer.name}") 
+    print("Weights:") 
+    print(np.round(weights, 4)) 
+    print("Biases:") 
+    print(np.round(biases, 4)) 
