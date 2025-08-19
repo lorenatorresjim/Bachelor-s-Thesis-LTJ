@@ -1,0 +1,43 @@
+##### SCRIPT FOR NORMALIZING DATA BEFORE ENTERING THE NN 
+ 
+import pandas as pd 
+import numpy as np 
+from sklearn.preprocessing import MinMaxScaler 
+ 
+# Load the files 
+file_peaks_intervals = r"C:\Users\loren\Downloads\TFG MITBIH 
+TRAIN\time_peaks_intervals_clean.csv" 
+file_derivatives = r"C:\Users\loren\Downloads\TFG MITBIH 
+TRAIN\derivatives_clean.csv" 
+ 
+df_peaks = pd.read_csv(file_peaks_intervals) 
+df_derivatives = pd.read_csv(file_derivatives) 
+ 
+# Rename columns for consistency 
+df_peaks.rename(columns={"Fila": "ID"}, inplace=True) 
+df_derivatives.rename(columns={"Row Number": "ID", "Data": 
+"Derivadas"}, inplace=True) 
+ 
+# Assure derivates column is a string and strip whitespace 
+df_derivatives["Derivadas"] = df_derivatives["Derivadas"].apply(lambda 
+x: x.strip()) 
+ 
+# Join dataframes on "ID" 
+df = df_peaks.merge(df_derivatives, on="ID") 
+df = df.dropna()  # Eliminar filas con valores NaN 
+ 
+# Normalize only numerical columns (excluding ID, Etiqueta, and 
+Derivadas) 
+cols_excluir = ["ID", "Etiqueta", "Derivadas"] 
+cols_normalizar = [col for col in df.columns if col not in 
+cols_excluir] 
+ 
+scaler = MinMaxScaler() #minmax scaler for normalization 
+df[cols_normalizar] = scaler.fit_transform(df[cols_normalizar]) 
+ 
+# Save normalized data to CSV 
+normalized_file = r"C:\Users\loren\Downloads\TFG MITBIH 
+TRAIN\normalized_data.csv" 
+df.to_csv(normalized_file, index=False) 
+ 
+print(f"Normalized data saved in: {normalized_file}") 
