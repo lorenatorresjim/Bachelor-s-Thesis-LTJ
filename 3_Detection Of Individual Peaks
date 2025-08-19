@@ -1,0 +1,83 @@
+##### SCRIPT FOR DETECTING PEAKS INDIVIDUALLY 
+ 
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+from scipy.signal import find_peaks 
+import ast 
+ 
+# CARGAR LA SEÑAL 
+archivo_csv = r"C:\Users\loren\Downloads\TFG MITBIH 
+TRAIN\filtered_signals_movavg.csv" 
+df = pd.read_csv(archivo_csv)  # NO HEADERS 
+ 
+# EXTRAER UNA ÚNICA SEÑAL 
+signal = df.iloc[1].values  # Index can be changed to select different 
+signals 
+ 
+# Plot 
+plt.figure(figsize=(12, 4)) 
+plt.plot(signal, label="ECG", color="b") 
+plt.title("Señal ECG desde CSV") 
+plt.xlabel("Muestras") 
+plt.ylabel("Amplitud") 
+plt.legend() 
+plt.show() 
+ 
+ 
+# R peak detection 
+picos_R, _ = find_peaks(signal, height=np.max(signal) * 0.6, 
+distance=100)  # Ajusta la altura y distancia según tu señal 
+ 
+# Plot for only R peaks 
+plt.figure(figsize=(12, 4)) 
+plt.plot(signal, label="ECG", color="b") 
+plt.plot(picos_R, signal[picos_R], "ro", label="Picos R")  # Marcamos 
+los picos R en rojo 
+plt.title("Detección de Picos R") 
+plt.xlabel("Muestras") 
+plt.ylabel("Amplitud") 
+plt.legend() 
+plt.show() 
+ 
+ 
+# Close windows for P,Q,S,T detection 
+ventana_qs = 20  # Samples before R for Q and after R for S 
+ventana_pt = 40  # Samples before Q for P and after S for T 
+ 
+picos_Q, picos_S, picos_P, picos_T = [], [], [], [] 
+ 
+for r in picos_R: 
+    # Look for Q (minimum before R) 
+    if r - ventana_qs > 0: 
+        q = np.argmin(signal[r - ventana_qs:r]) + (r - ventana_qs) 
+        picos_Q.append(q) 
+ 
+    # Look for S (minimum after R) 
+    if r + ventana_qs < len(signal): 
+        s = np.argmin(signal[r:r + ventana_qs]) + r 
+        picos_S.append(s) 
+ 
+    # Look for P (maximum before Q) 
+    if q - ventana_pt > 0: 
+        p = np.argmax(signal[q - ventana_pt:q]) + (q - ventana_pt) 
+        picos_P.append(p) 
+ 
+    # Look for T (maximum after S) 
+    if s + ventana_pt < len(signal): 
+        t = np.argmax(signal[s:s + ventana_pt]) + s 
+        picos_T.append(t) 
+ 
+# Plot with all peaks 
+plt.figure(figsize=(12, 4)) 
+plt.plot(signal, label="ECG", color="b") 
+plt.plot(picos_R, signal[picos_R], "ro", label="R (rojo)") 
+plt.plot(picos_Q, signal[picos_Q], "go", label="Q (verde)") 
+plt.plot(picos_S, signal[picos_S], "yo", label="S (amarillo)") 
+plt.plot(picos_P, signal[picos_P], "mo", label="P (magenta)") 
+plt.plot(picos_T, signal[picos_T], "co", label="T (cian)") 
+plt.title("PQRST Peak Detection") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude") 
+plt.legend() 
+plt.show() 
