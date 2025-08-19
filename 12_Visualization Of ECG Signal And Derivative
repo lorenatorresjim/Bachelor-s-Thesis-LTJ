@@ -1,0 +1,37 @@
+##### SCRIPT FOR VISUALIZING ECG SIGNAL AND DERIVATIVE 
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+from scipy.signal import savgol_filter 
+ 
+df= 
+pd.read_csv(r"C:\Users\loren\Downloads\TFG_LTJ_CORREO3\CSV\normalized_d
+ ata.csv") 
+ 
+# Select the row to visualize 
+fila_a_visualizar = 80700  # <-- change this to visualize a different 
+row 
+ 
+# Extract the signal and label from the selected row 
+valores = df.iloc[fila_a_visualizar].values 
+signal = valores[:-1] 
+etiqueta = int(valores[-1]) 
+ 
+# Compute the smoothed derivative using Savitzky-Golay filter 
+derivada = savgol_filter(signal, window_length=11, polyorder=2, 
+deriv=1) 
+ 
+# Temporal axis for plotting 
+tiempo = np.arange(len(signal)) 
+ 
+# Plot 
+plt.figure(figsize=(12, 6)) 
+plt.plot(tiempo, signal, label='ECG Signal', color='blue') 
+plt.plot(tiempo, derivada, label='Smoothed Derivative', color='orange') 
+plt.title(f"ECG Signal and Derivative (Label: {etiqueta})") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.legend() 
+plt.grid(True) 
+plt.tight_layout() 
+plt.show() 
