@@ -1,0 +1,94 @@
+##### SCRIPT FOR SAVING DETECTED PEAKS AND DERIVATIVES TO CSV FILES 
+ 
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+from scipy.signal import find_peaks, savgol_filter 
+import os 
+ 
+# Load the signal 
+archivo_csv = r"C:\Users\loren\Downloads\TFG MITBIH 
+TRAIN\filtered_signals_movavg.csv" 
+df = pd.read_csv(archivo_csv, header=None)   
+ 
+resultados_picos = [] 
+resultados_derivada = [] 
+ 
+# Search windows 
+ventana_qs = 20 
+ventana_pt = 50 
+ 
+for index, row in df.iterrows(): 
+    valores = row.values 
+    signal = valores[:-1]             
+    label = int(valores[-1])           
+    tiempo = np.arange(len(signal)) 
+ 
+    # Savgol filter for smoothing the signal 
+    derivada_suave = savgol_filter(signal, window_length=11, 
+polyorder=2, deriv=1) 
+ 
+    # R peaks 
+    picos_R, _ = find_peaks(signal, height=np.max(signal) * 0.6, 
+distance=100) 
+ 
+    picos_P, picos_Q, picos_S, picos_T = [], [], [], [] 
+    intervalos_QRS, intervalos_PR, intervalos_QT = [], [], [] 
+ 
+    for i, r in enumerate(picos_R): 
+        q = s = p = t = None 
+ 
+        if r - ventana_qs > 0: 
+            q = np.argmin(signal[r - ventana_qs:r]) + (r - ventana_qs) 
+            picos_Q.append(q) 
+ 
+        if q is not None: 
+            if r + ventana_qs < len(signal): 
+                s = np.argmin(signal[r:r + ventana_qs]) + r 
+                picos_S.append(s) 
+                intervalos_QRS.append(s - q) 
+ 
+            if q - ventana_pt > 0: 
+                p = np.argmax(signal[q - ventana_pt:q]) + (q - 
+ventana_pt) 
+                picos_P.append(p) 
+                intervalos_PR.append(r - q) 
+ 
+            if s is not None and s + ventana_pt < len(signal): 
+                t = np.argmax(signal[s:s + ventana_pt]) + s 
+                picos_T.append(t) 
+                intervalos_QT.append(t - q) 
+ 
+    # Save results for peaks and intervals with label 
+    resultados_picos.append({ 
+        "Fila": index, 
+        "Etiqueta": label, 
+        "Picos R": picos_R.tolist(), 
+        "Picos P": picos_P, 
+        "Picos Q": picos_Q, 
+        "Picos S": picos_S, 
+        "Picos T": picos_T, 
+        "Intervalos QRS": intervalos_QRS, 
+        "Intervalos PR": intervalos_PR, 
+        "Intervalos QT": intervalos_QT 
+    }) 
+ 
+    # Save derivative results for further uses 
+    resultados_derivada.append({ 
+        "Fila": index, 
+        "Etiqueta": label, 
+        "Derivada": derivada_suave.tolist() 
+    }) 
+ 
+# Save results to CSV files 
+directory_origin = r"C:\Users\loren\Downloads\TFG MITBIH TRAIN" 
+ 
+df_picos = pd.DataFrame(resultados_picos) 
+output_file_picos = os.path.join(directory_origin, 
+"time_peaks_intervals.csv") 
+df_picos.to_csv(output_file_picos, index=False) 
+ 
+df_derivada = pd.DataFrame(resultados_derivada) 
+output_file_derivada = os.path.join(directory_origin, 
+"derivatives.csv") 
+df_derivada.to_csv(output_file_derivada, index=False)
