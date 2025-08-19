@@ -1,0 +1,35 @@
+#####SCRIPT FOR GENERATING A CSV FILE WITH MA-FILTERED SIGNALS 
+ 
+# LOAD LIBRARIES AND FILES 
+import pandas as pd 
+import numpy as np 
+ 
+file_path = r"C:\Users\loren\Downloads\TFG MITBIH 
+TRAIN\mitbih_train.csv" 
+df = pd.read_csv(file_path, header=None) 
+ 
+moving_av_signals = [] 
+moving_avg_window = 5 
+ 
+for i in range(len(df)): 
+    row = df.iloc[i].values 
+    signal = row[:-1]              # All values except the last one 
+(the signal) 
+    label = row[-1]                # The last value is the label (0-4) 
+ 
+    # Apply moving average filter 
+    moving_avg = np.convolve(signal, 
+np.ones(moving_avg_window)/moving_avg_window, mode='same') 
+    
+    # Join the moving average with the label and append to the list 
+    new_row = np.append(moving_avg, label) 
+    moving_av_signals.append(new_row) 
+ 
+# Create a DataFrame with the moving average signals 
+df_moving_avg = pd.DataFrame(moving_av_signals) 
+ 
+output_file = r"C:\Users\loren\Downloads\TFG MITBIH 
+TRAIN\filtered_signals_movavg.csv" 
+df_moving_avg.to_csv(output_file, index=False, header=False) 
+ 
+print(f"File saved in: {output_file}") 
