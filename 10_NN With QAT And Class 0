@@ -1,0 +1,161 @@
+##### SCRIPT FOR THE NN WITH QAT AND CLASS 0 
+ 
+import pandas as pd 
+import numpy as np 
+import tensorflow as tf 
+from sklearn.model_selection import train_test_split 
+from sklearn.preprocessing import LabelEncoder 
+from tensorflow.keras.utils import to_categorical 
+from tensorflow.keras.models import Sequential 
+from tensorflow.keras.layers import Dense 
+from sklearn.metrics import classification_report, confusion_matrix 
+import seaborn as sns 
+import matplotlib.pyplot as plt 
+ 
+import tf_keras as keras 
+from keras import layers, Model 
+from keras.datasets import mnist 
+# from tensorflow.keras import initializers 
+from keras import initializers 
+from keras import regularizers 
+ 
+# Load the data 
+data = 
+pd.read_csv(r"C:\Users\loren\Downloads\TFG_LTJ_CORREO3\CSV\normalized_d
+ ata.csv") 
+ 
+# Select necessary columns 
+features = data[["Intervalos PR", "Intervalos QRS", "Intervalos QT"]] 
+labels = data["Etiqueta"]  
+ 
+# Codify labels 
+encoder = LabelEncoder() 
+labels_encoded = encoder.fit_transform(labels) 
+ 
+# One-hot encoding for classification 
+labels_categorical = to_categorical(labels_encoded) 
+ 
+# Divide between train and test 
+X_train, X_test, y_train, y_test = train_test_split(features, 
+labels_categorical, test_size=0.2, random_state=42) 
+ 
+# Definition of necessary functions of TensorFlow for QAT 
+import tensorflow_model_optimization as tfmot 
+ 
+quantize_annotate_layer = 
+tfmot.quantization.keras.quantize_annotate_layer 
+quantize_annotate_model = 
+tfmot.quantization.keras.quantize_annotate_model 
+quantize_scope = tfmot.quantization.keras.quantize_scope 
+ 
+LastValueQuantizer = 
+tfmot.quantization.keras.quantizers.LastValueQuantizer 
+MovingAverageQuantizer = 
+tfmot.quantization.keras.quantizers.MovingAverageQuantizer 
+ 
+#class CustomLayer(keras.layers.Dense): 
+#  pass 
+ 
+class CustomLayer(keras.layers.Dense): 
+  pass 
+ 
+class 
+DefaultDenseQuantizeConfig(tfmot.quantization.keras.QuantizeConfig): 
+    # Configure how to quantize weights. 
+    def get_weights_and_quantizers(self, layer): 
+      # num_bits defines the number of bits for the weights W 
+      return [(layer.kernel, LastValueQuantizer(num_bits=8, 
+symmetric=True, narrow_range=True, per_axis=False))] 
+ 
+    # Configure how to quantize activations. 
+    def get_activations_and_quantizers(self, layer): 
+      # num_bits defines the number of bits for the activation 
+functions 
+      return [(layer.activation, MovingAverageQuantizer(num_bits=8, 
+symmetric=True, narrow_range=True, per_axis=False))] 
+ 
+    def set_quantize_weights(self, layer, quantize_weights): 
+      # Add this line for each item returned in 
+`get_weights_and_quantizers` 
+      # , in the same order 
+      layer.kernel = quantize_weights[0] 
+ 
+    def set_quantize_activations(self, layer, quantize_activations): 
+      # Add this line for each item returned in 
+`get_activations_and_quantizers` 
+      # , in the same order. 
+      layer.activation = quantize_activations[0] 
+ 
+    # Configure how to quantize outputs (may be equivalent to 
+activations). 
+    def get_output_quantizers(self, layer): 
+      return [] 
+ 
+    def get_config(self): 
+      return {} 
+ 
+# Structure of NN 
+inputs_base = keras.Input(shape=(3,)) 
+x = quantize_annotate_layer(CustomLayer(16, activation="relu", 
+use_bias=True), DefaultDenseQuantizeConfig())(inputs_base) 
+x = quantize_annotate_layer(CustomLayer(8, activation="relu", 
+use_bias=True), DefaultDenseQuantizeConfig())(x) 
+outputs_base = quantize_annotate_layer(CustomLayer(5, 
+activation="softmax", use_bias=True), DefaultDenseQuantizeConfig())(x) 
+model = quantize_annotate_model(keras.Model(inputs=inputs_base, 
+outputs=outputs_base)) 
+model.summary() 
+ 
+model.compile(loss=keras.losses.CategoricalCrossentropy(),optimizer=ker
+ as.optimizers.Adam(),metrics=["accuracy"],) 
+model.fit(X_train, y_train, epochs=50, batch_size = 16, 
+validation_split=0.2) 
+ 
+# Evaluate the model 
+loss, accuracy = model.evaluate(X_test, y_test) 
+print(f"\nPrecision in test: {accuracy:.4f}") 
+ 
+# Predict labels 
+y_pred_probs = model.predict(X_test) 
+y_pred = np.argmax(y_pred_probs, axis=1) 
+y_true = np.argmax(y_test, axis=1) 
+ 
+# Clasification report 
+print("\n Clasification Report:") 
+print(classification_report(y_true, y_pred, target_names=[str(c) for c 
+in encoder.classes_])) 
+ 
+model.save('baseline_lorena_EG.keras') 
+ 
+# `quantize_apply` requires mentioning `DefaultDenseQuantizeConfig` 
+with `quantize_scope` 
+# as well as the custom Keras layer. 
+with quantize_scope( 
+  {'DefaultDenseQuantizeConfig': DefaultDenseQuantizeConfig, 
+   'CustomLayer': CustomLayer}): 
+  # Use `quantize_apply` to actually make the model quantization aware. 
+  q_aware_model = tfmot.quantization.keras.quantize_apply(model) 
+ 
+q_aware_model.compile(loss=keras.losses.CategoricalCrossentropy(),optim
+ izer=keras.optimizers.Adam(),metrics=["accuracy"],) 
+q_aware_model.fit(X_train, y_train, batch_size=10, epochs=5) 
+ 
+q_aware_model.evaluate(X_test, y_test) 
+ 
+# Predect labels 
+y_pred_probs = q_aware_model.predict(X_test) 
+y_pred = np.argmax(y_pred_probs, axis=1) 
+y_true = np.argmax(y_test, axis=1) 
+ 
+print("\n Clasification Report:") 
+print(classification_report(y_true, y_pred, target_names=[str(c) for c 
+in encoder.classes_])) 
+ 
+cm = confusion_matrix(y_true, y_pred) 
+plt.figure(figsize=(8, 6)) 
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+xticklabels=encoder.classes_, yticklabels=encoder.classes_) 
+plt.xlabel('Predicted Label') 
+plt.ylabel('True Label') 
+plt.title('Confusion Matrix') 
+plt.show() 
