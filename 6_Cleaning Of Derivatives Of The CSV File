@@ -1,0 +1,33 @@
+##### SCRIPT FOR CLEANING THE DERIVATIVES CSV FILE 
+ 
+import csv 
+import ast 
+ 
+def clean_derivatives(input_file, output_file): 
+    with open(input_file, 'r', encoding='utf-8') as infile, 
+open(output_file, 'w', encoding='utf-8', newline='') as outfile: 
+        reader = csv.reader(infile) 
+        writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL, 
+delimiter=',') 
+        
+        header = next(reader)  # Skip header 
+        writer.writerow(["Row Number", "Label", "Data"])  # New header 
+with labels 
+        
+        for row in reader: 
+            if row: 
+                row_number = row[0] 
+                label = row[1] 
+                data_str = row[2].strip('"') 
+                try: 
+                    data_list = ast.literal_eval(data_str) 
+                    cleaned_data = ', '.join(map(str, data_list)) 
+                    writer.writerow([row_number, label, cleaned_data]) 
+                except (SyntaxError, ValueError): 
+                    print(f"Error procesando la fila: {row}") 
+ 
+# Run the function to clean the derivatives file 
+clean_derivatives( 
+    r'C:\Users\loren\Downloads\TFG MITBIH TRAIN\derivatives.csv', 
+    r'C:\Users\loren\Downloads\TFG MITBIH TRAIN\derivatives_clean.csv' 
+)
