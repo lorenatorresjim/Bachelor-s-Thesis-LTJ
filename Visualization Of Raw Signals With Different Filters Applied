@@ -1,0 +1,300 @@
+#####SCRIPT FOR VISUALIZING RAW SIGNALS WITH DIFFERENT FILTERS APPLIED 
+ 
+## Load libraries and data 
+ 
+import openpyxl 
+from tabulate import tabulate 
+import numpy as np 
+import os 
+import pandas as pd 
+import matplotlib.pyplot as plt 
+from scipy.ndimage import median_filter 
+from scipy.signal import firwin, lfilter 
+ 
+ 
+file_path = r"C:\Users\loren\Downloads\TFG MITBIH 
+TRAIN\mitbih_train.csv" 
+df = pd.read_csv(file_path, header = None) 
+# print(df) 
+ 
+ 
+#Visualize all the signals in the file 
+data = [] 
+for row in range(0, len(df)): 
+    data.append(df.iloc[row, 0])   
+ 
+plt.figure(figsize=(10, 5)) 
+plt.plot(data, label = "ECG signal") 
+plt.xlabel("Muestras") 
+plt.ylabel("Amplitud (mV)") 
+plt.title("Señal ECG del archivo") 
+plt.legend() 
+plt.show() 
+#--------------------------------------------------------------------------------------------------------- 
+#Visualize signals of each label and see differences 
+row_0 = df.iloc[0].values #change the index to visualize different 
+signals 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_0, label="ECG Signal") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 0 ECG signal without filtering ") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+row_1 = df.iloc[72473].values 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_1, label="ECG Signal") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 1 ECG signal without filtering") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+row_2 = df.iloc[75100].values 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_2, label="ECG Signal") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 2 ECG signal without filtering") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+row_3 = df.iloc[80485].values 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_3, label="ECG Signal") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 3 ECG signal without filtering") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+row_4 = df.iloc[81126].values 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_4, label="ECG Signal") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 4 ECG signal without filtering") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+#--------------------------------------------------------------------------------------------------------- 
+ 
+# Visualize raw signals and apply median filter 
+ 
+row_0 = df.iloc[0].values #change index 
+signal1_filtered = median_filter(row_0, size=3) #size is the size of 
+the window for the filter 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_0, label="ECG Signal") 
+plt.plot(signal1_filtered, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 0 ECG signal without filtering and filtered with 
+median filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+ 
+row_1 = df.iloc[72473].values 
+signal2_filtered = median_filter(row_1, size=3) 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_1, label="ECG Signal") 
+plt.plot(signal2_filtered, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 1 ECG signal without filtering and filtered with 
+median filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+row_2 = df.iloc[75100].values 
+signal3_filtered = median_filter(row_2, size=3) 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_2, label="ECG Signal") 
+plt.plot(signal3_filtered, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 2 ECG signal without filtering and filtered with 
+median filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+row_3 = df.iloc[80485].values 
+signal4_filtered = median_filter(row_3, size=3) 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_3, label="ECG Signal") 
+plt.plot(signal4_filtered, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 3 ECG signal without filtering and filtered with 
+median filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+row_4 = df.iloc[81126].values 
+signal5_filtered = median_filter(row_4, size=3) 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_4, label="ECG Signal") 
+plt.plot(signal5_filtered, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 4 ECG signal without filtering and filtered with 
+median filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+#--------------------------------------------------------------------------------------------------------- 
+ 
+#Visualize raw signals and apply FIR filter 
+ 
+coef_fir_1 = firwin(numtaps = 21, cutoff = 0.1, window = "hamming")  #i 
+choose hamming window, you can change it to other windows like 
+"blackman", "hanning", etc. 
+fir_filter_1 = lfilter(coef_fir_1, 1.0, row_0) 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_0, label="ECG Signal") 
+plt.plot(fir_filter_1, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 0 ECG signal without filtering and filtered with FIR 
+filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+ 
+coef_fir_2 = firwin(numtaps = 21, cutoff = 0.1, window = "hamming") 
+fir_filter_2 = lfilter(coef_fir_2, 1.0, row_1) 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_1, label="ECG Signal") 
+plt.plot(fir_filter_2, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 1 ECG signal without filtering and filtered with FIR 
+filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+ 
+coef_fir_3 = firwin(numtaps = 21, cutoff = 0.1, window = "hamming") 
+fir_filter_3 = lfilter(coef_fir_3, 1.0, row_2) 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_2, label="ECG Signal") 
+plt.plot(fir_filter_3, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 2 ECG signal without filtering and filtered with FIR 
+filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+coef_fir_4 = firwin(numtaps = 21, cutoff = 0.1, window = "hamming") 
+fir_filter_4 = lfilter(coef_fir_4, 1.0, row_3) 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_3, label="ECG Signal") 
+plt.plot(fir_filter_4, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 3 ECG signal without filtering and filtered with FIR 
+filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+ 
+coef_fir_5 = firwin(numtaps = 21, cutoff = 0.1, window = "hamming") 
+fir_filter_5 = lfilter(coef_fir_5, 1.0, row_4) 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_4, label="ECG Signal") 
+plt.plot(fir_filter_5, label="ECG Signal filtered") 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 4 ECG signal without filtering and filtered with FIR 
+filter and window = 3") 
+plt.grid() 
+plt.legend() 
+plt.show() 
+#------------------------------------------------------------------------------------------------------- 
+ 
+#Visualize raw signals and apply moving average filter 
+window = 5 
+fila_media_movil_0 = np.convolve(row_0, np.ones(window)/window, 
+mode='valid') 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_0, label="Original signal", alpha=0.5) 
+plt.plot(range(window-1, len(row_0)), fila_media_movil_0, label="Moving 
+Average", color='orange') 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 0 ECG signal without filtering and filtered with 
+moving average filter and window = 5") 
+plt.legend() 
+plt.grid() 
+plt.show() 
+ 
+ 
+fila_media_movil_1 = np.convolve(row_1, np.ones(window)/window, 
+mode='valid') 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_1, label="Original signal", alpha=0.5) 
+plt.plot(range(window-1, len(row_1)), fila_media_movil_1, label="Moving 
+Average", color='orange') 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 1 ECG signal without filtering and filtered with 
+moving average filter and window = 5") 
+plt.legend() 
+plt.grid() 
+plt.show() 
+ 
+fila_media_movil_2 = np.convolve(row_2, np.ones(window)/window, 
+mode='valid') 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_2, label="Original signal", alpha=0.5) 
+plt.plot(range(window-1, len(row_2)), fila_media_movil_2, label="Moving 
+Average", color='orange') 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 2 ECG signal without filtering and filtered with 
+moving average filter and window = 5") 
+plt.legend() 
+plt.grid() 
+plt.show() 
+ 
+fila_media_movil_3 = np.convolve(row_3, np.ones(window)/window, 
+mode='valid') 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_3, label="Original signal", alpha=0.5) 
+plt.plot(range(window-1, len(row_3)), fila_media_movil_3, label="Moving 
+Average", color='orange') 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 3 ECG signal without filtering and filtered with 
+moving average filter and window = 5") 
+plt.legend() 
+plt.grid() 
+plt.show() 
+ 
+fila_media_movil_4 = np.convolve(row_4, np.ones(window)/window, 
+mode='valid') 
+plt.figure(figsize=(10, 5)) 
+plt.plot(row_4, label="Original signal", alpha=0.5) 
+plt.plot(range(window-1, len(row_4)), fila_media_movil_4, label="Moving 
+Average", color='orange') 
+plt.xlabel("Samples") 
+plt.ylabel("Amplitude (mV)") 
+plt.title("Label 4 ECG signal without filtering and filtered with 
+moving average filter and window = 5") 
+plt.legend() 
+plt.grid() 
+plt.show() 
